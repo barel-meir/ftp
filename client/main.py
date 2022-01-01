@@ -157,14 +157,6 @@ def upload_artifact(server):
     :param server: the server to upload to
     """
     try:
-        # """
-        # EXAMPLE FOR SENDING FILES
-        # f_name = '2'
-        # f_path = r'C:\Users\tc10076\Desktop\tmp\ssssssss\2.txt'
-        # data = {
-        #     "files": (f_name, open(f_path, 'rb'))
-        # }
-        # """
         printer(f"upload artifacts")
         files_to_upload_paths = []
         is_to_enter_more_files = True
