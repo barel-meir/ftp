@@ -24,6 +24,7 @@ operations_dict = {
     3: "upload artifacts"
 }
 yes_no_dict = {0: "No", 1: "Yes"}
+server = Server()
 
 
 def read_int(message=''):
@@ -106,8 +107,8 @@ def create_artifacts_directory():
 
 
 def initiate_connection():
+    global server
     printer("initiating ftp server connection")
-    server = Server()
     try:
         server.ip = str(config['connection']['address'])
     except Exception:
@@ -122,7 +123,7 @@ def initiate_connection():
     return server
 
 
-def test_connection(server):
+def test_connection():
     try:
         printer(f"testing connection to {server.base_url}")
         payload = {}
@@ -144,7 +145,7 @@ def exit_program():
     exit()
 
 
-def get_list_of_all_artifacts(server):
+def get_list_of_all_artifacts():
     try:
         printer(f"get  list of all artifacts")
         url = server.base_url + "list"
@@ -158,7 +159,7 @@ def get_list_of_all_artifacts(server):
         printer(f'(!) an exception occurred: {ex.args}', 3)
 
 
-def upload_artifact(server):
+def upload_artifact():
     """
     gets from the user the pats of the desired files to upload
     Note: this method assums the file is exists and valid
@@ -207,7 +208,7 @@ def handle_archive_download(content):
     os.remove(path_to_zip_file)
 
 
-def download_multiple_artifacts(server, files_to_download_names):
+def download_multiple_artifacts(files_to_download_names):
     try:
         files_to_upload_tuples = []
         for f_name in files_to_download_names:
@@ -227,7 +228,7 @@ def download_multiple_artifacts(server, files_to_download_names):
         printer(f'(!) an exception occurred: {ex.args}', 3)
 
 
-def download_single_artifact(server, file_to_download_name):
+def download_single_artifact(file_to_download_name):
     try:
         data = json.dumps({"name": file_to_download_name})
 
@@ -238,6 +239,7 @@ def download_single_artifact(server, file_to_download_name):
 
         if response.status_code == 200:
             save_artifact(file_to_download_name, response.content)
+            printer(f"file {file_to_download_name} downloaded successfully", 1)
         elif response.status_code == 404:
             printer(f"file {file_to_download_name} is not found in server")
         else:
@@ -246,7 +248,7 @@ def download_single_artifact(server, file_to_download_name):
         printer(f'(!) an exception occurred: {ex.args}', 3)
 
 
-def download(server):
+def download():
     printer(f"download artifacts from server")
     is_to_enter_more_files = True
     files_counter = 1
@@ -260,14 +262,14 @@ def download(server):
         is_to_enter_more_files = read_bool("Would you like to download more files?")
 
     if len(files_to_download_names) == 1:
-        download_single_artifact(server, files_to_download_names[0])
+        download_single_artifact(files_to_download_names[0])
     else:
-        download_multiple_artifacts(server, files_to_download_names)
+        download_multiple_artifacts(files_to_download_names)
 
 
 def cli():
-    server = initiate_connection()
-    if not test_connection(server):
+    initiate_connection()
+    if not test_connection():
         if pick_from_map(map=yes_no_dict, message="Would you like to exit?"):
             exit_program()
         else:
@@ -278,17 +280,17 @@ def cli():
         printer("Please pick operation", severity=1)
         op, text = pick_from_map(map=operations_dict, message="Please pick operation")
         if op == 1:
-            get_list_of_all_artifacts(server)
+            get_list_of_all_artifacts()
         elif op == 2:
-            download(server)
+            download()
         elif op == 3:
-            upload_artifact(server)
+            upload_artifact()
         else:
             exit_program()
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
     printer("FTP CLIENT", 1)
     logging.debug("initiating config file")
     config._interpolation = ExtendedInterpolation()
