@@ -106,29 +106,33 @@ def initiate_connection():
     server = Server()
     try:
         server.ip = str(config['connection']['address'])
-    except ...:
+    except Exception:
         server.ip = input("Please enter the server address: ")
     try:
         server.port = int(config['connection']['port'])
-    except ...:
+    except Exception:
         server.port = read_int("Please enter the server address: ")
 
-    server.base_url = "http://{}:{}/".format(server.ip, server.port)
+    server.base_url = "https://{}:{}/".format(server.ip, server.port)
     printer(f"initiating connection to {server.base_url}")
     return server
 
 
 def _test_connection(server):
-    printer(f"testing connection to {server.base_url}")
-    payload = {}
-    headers = {}
-    response_code = requests.request("GET", server.base_url, headers=headers, data=payload).status_code
-    if response_code == 200:
-        printer(f"successful connection to {server.base_url}", 1)
-    else:
-        printer(f'(!) could not connect to server! {server.base_url}, status code: {response_code}', 3)
+    try:
+        printer(f"testing connection to {server.base_url}")
+        payload = {}
+        headers = {}
+        response_code = requests.get(server.base_url, headers=headers, data=payload, verify='cert.cer').status_code
+        if response_code == 200:
+            printer(f"successful connection to {server.base_url}", 1)
+        else:
+            printer(f'(!) could not connect to server! {server.base_url}, status code: {response_code}', 3)
 
-    return response_code == 200
+        return response_code == 200
+    except Exception as ex:
+        printer(f'(!) an exception occurred: {ex.args}', 3)
+        return False
 
 
 def _exit():

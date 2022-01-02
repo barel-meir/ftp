@@ -188,7 +188,7 @@ def initiate_server_connection():
         exit(1)
 
     logging.info(f"starting server at {address}:{port}")
-    uvicorn.run(app, host=address, port=port)
+    uvicorn.run(app, host=address, port=port,  ssl_keyfile="./key.pem", ssl_certfile="./cert.pem")
 
 
 if __name__ == "__main__":
