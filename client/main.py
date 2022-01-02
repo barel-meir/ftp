@@ -21,7 +21,8 @@ operations_dict = {
     0: "exit",
     1: "get list of all files",
     2: "download artifacts",
-    3: "upload artifacts"
+    3: "upload artifacts",
+    4: "download all"
 }
 yes_no_dict = {0: "No", 1: "Yes"}
 server = Server()
@@ -155,6 +156,7 @@ def get_list_of_all_artifacts():
         printer("artifacts:", 1)
         json_data = json.loads(response.text)
         printer(json_data, 1)
+        return json_data
     except Exception as ex:
         printer(f'(!) an exception occurred: {ex.args}', 3)
 
@@ -267,6 +269,13 @@ def download():
         download_multiple_artifacts(files_to_download_names)
 
 
+def download_all():
+    files_in_server = get_list_of_all_artifacts()
+    files_names = []
+    for f in files_in_server:
+        files_names.append(f['name'])
+    download_multiple_artifacts(files_names)
+
 def cli():
     initiate_connection()
     if not test_connection():
@@ -285,6 +294,8 @@ def cli():
             download()
         elif op == 3:
             upload_artifact()
+        elif op == 4:
+            download_all()
         else:
             exit_program()
 

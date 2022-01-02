@@ -74,4 +74,5 @@ the ui of the app is a simple cli which gives the user the following options:
 * get list of all files       
 * download artifacts               
 * upload artifacts 
+* download all artifacts from server
 
