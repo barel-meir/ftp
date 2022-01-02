@@ -66,6 +66,9 @@ def pick_from_map(map, message=None, print_map=True):
 
 
 def printer(message, severity=0):
+    """
+    print to the console and the log
+    """
     if severity == 0:
         logging.debug(message)
     elif severity == 1:
@@ -108,6 +111,10 @@ def create_artifacts_directory():
 
 
 def initiate_connection():
+    """
+    initiate the global server object with the address and port from the configuration file.
+    if there is no valid data in the config file then it asks the user for input.
+    """
     global server
     printer("initiating ftp server connection")
     try:
@@ -125,6 +132,9 @@ def initiate_connection():
 
 
 def test_connection():
+    """
+    try to get the server root address
+    """
     try:
         printer(f"testing connection to {server.base_url}")
         payload = {}
@@ -147,6 +157,9 @@ def exit_program():
 
 
 def get_list_of_all_artifacts():
+    """
+    gets from the server a list of meta data of all the files that are currently stored in it.
+    """
     try:
         printer(f"get  list of all artifacts")
         url = server.base_url + "list"
@@ -165,7 +178,6 @@ def upload_artifact():
     """
     gets from the user the pats of the desired files to upload
     Note: this method assums the file is exists and valid
-    :param server: the server to upload to
     """
     try:
         printer(f"upload artifacts")
@@ -200,6 +212,9 @@ def upload_artifact():
 
 
 def handle_archive_download(content):
+    """
+    gets a zip file, extract its content in the local artifacts path and delete the zip file
+    """
     temp_zip_name = "{}{}".format(uuid.uuid4(), '.zip')
     path_to_zip_file = save_artifact(temp_zip_name, content)
     printer(f"extracting zip {temp_zip_name} at {artifacts_path}")
@@ -251,6 +266,11 @@ def download_single_artifact(file_to_download_name):
 
 
 def download():
+    """
+    gets from the user the desired file(s) path to upload.
+    supports multiple files in a single line separated by space
+    Note: assume the file name does not contains anu spaces!
+    """
     printer(f"download artifacts from server")
     is_to_enter_more_files = True
     files_counter = 1
@@ -276,7 +296,11 @@ def download_all():
         files_names.append(f['name'])
     download_multiple_artifacts(files_names)
 
+
 def cli():
+    """
+    this is the main ui component which interacts with the user.
+    """
     initiate_connection()
     if not test_connection():
         if pick_from_map(map=yes_no_dict, message="Would you like to exit?"):

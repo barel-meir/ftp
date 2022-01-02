@@ -99,7 +99,7 @@ async def root():
 @app.get("/list")
 async def get_all_files():
     """
-    :return: all files meta data in DB in the form of its name and size
+    :return: all files meta data in DB in the form of its name and size (data out model)
     """
     logging.debug("handle get_all_files")
     files = []
@@ -110,6 +110,11 @@ async def get_all_files():
 
 @app.get("/files", response_class=FileResponse)
 async def get_file(files_data: List[FileDataIn]):
+    """
+    gets a list of files names, if the file exists in the server then it will be added to a zip archive, else it would
+     be skipped.
+    :return: a zip archive contains all of the valid requested files.
+    """
     try:
         files: List[FileData] = []
         for file_name in files_data:
@@ -126,6 +131,11 @@ async def get_file(files_data: List[FileDataIn]):
 
 @app.get("/file")
 async def get_file(file_data: FileDataIn, response: Response):
+    """
+    gets a files name, if the file exists in the server then it will be sent back as response,
+    else error 404 would be return
+    :return: response contains the requested file.
+    """
     try:
         data = handle_get_file(file_data.name)
         return FileResponse(data.path)
