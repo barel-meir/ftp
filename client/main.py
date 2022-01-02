@@ -150,7 +150,7 @@ def get_list_of_all_artifacts(server):
         url = server.base_url + "list"
         payload = {}
         headers = {}
-        response = requests.get(url=url, headers=headers, data=payload)
+        response = requests.get(url=url, headers=headers, data=payload, verify='cert.cer')
         printer("artifacts:", 1)
         json_data = json.loads(response.text)
         printer(json_data, 1)
@@ -187,6 +187,7 @@ def upload_artifact(server):
             }
             response = requests.put(url=server.base_url + "file",
                                     files=data,
+                                    verify='cert.cer'
                                     )
             json_data = json.loads(response.text)
             printer(json_data, 1)
@@ -217,7 +218,7 @@ def download_multiple_artifacts(server, files_to_download_names):
             'Content-Type': 'application/json'
         }
 
-        response = requests.get(url=server.base_url + "files", headers=headers, data=data)
+        response = requests.get(url=server.base_url + "files", headers=headers, data=data, verify='cert.cer')
         if response.status_code == 200:
             handle_archive_download(response.content)
         else:
@@ -233,7 +234,7 @@ def download_single_artifact(server, file_to_download_name):
         headers = {
             'Content-Type': 'application/json'
         }
-        response = requests.get(url=server.base_url + "file", headers=headers, data=data)
+        response = requests.get(url=server.base_url + "file", headers=headers, data=data, verify='cert.cer')
 
         if response.status_code == 200:
             save_artifact(file_to_download_name, response.content)
