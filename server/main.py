@@ -22,7 +22,7 @@ responses = {
 config = ConfigParser(os.environ)
 
 
-def _save_artifact(artifact_data: FileData, artifact):
+def save_artifact(artifact_data: FileData, artifact):
     try:
         logging.debug(f"saving {artifact_data.name} at {artifact_data.path}")
         with open(artifact_data.path, "wb") as buffer:
@@ -31,23 +31,23 @@ def _save_artifact(artifact_data: FileData, artifact):
         raise ex
 
 
-def _generate_artifact_path(artifact_name):
+def generate_artifact_path(artifact_name):
     global artifacts_path
     return os.path.join(artifacts_path, artifact_name)
 
 
-def _handle_new_file(file: UploadFile):
+def handle_new_file(file: UploadFile):
     try:
         logging.debug(f'handle input file: {file.filename}')
-        file_data = FileData(name=file.filename, path=_generate_artifact_path(file.filename))
+        file_data = FileData(name=file.filename, path=generate_artifact_path(file.filename))
         db.append(file_data)
-        _save_artifact(file_data, file)
+        save_artifact(file_data, file)
         return file_data
     except Exception as ex:
         logging.error(f'(!) an exception occurred: {ex.args}')
 
 
-def _is_file_exist(file_name: str):
+def is_file_exist(file_name: str):
     logging.debug(f'searching file: {file_name}')
     for data in db:
         if data.name == file_name:
@@ -57,15 +57,15 @@ def _is_file_exist(file_name: str):
     return False, None
 
 
-def _handle_get_file(file_name: str):
+def handle_get_file(file_name: str):
     logging.debug(f'handle request for file: {file_name}')
-    is_exist, data = _is_file_exist(file_name)
+    is_exist, data = is_file_exist(file_name)
     if not is_exist:
         raise FileNotFoundError(file_name)
     return data
 
 
-def _zip_files(files_data: List[FileData]):
+def zip_files(files_data: List[FileData]):
     zip_filename = "archive.zip"
 
     s = io.BytesIO()
@@ -109,12 +109,12 @@ async def get_file(files_data: List[FileDataIn]):
         files: List[FileData] = []
         for file_name in files_data:
             try:
-                data = _handle_get_file(file_name.name)
+                data = handle_get_file(file_name.name)
                 files.append(data)
             except FileNotFoundError as ex:
                 logging.error(f'(!) could not find: {ex.args}')
 
-        return _zip_files(files)
+        return zip_files(files)
     except Exception as ex:
         logging.error(f'(!) an exception occurred: {ex.args}')
 
@@ -122,7 +122,7 @@ async def get_file(files_data: List[FileDataIn]):
 @app.get("/file")
 async def get_file(file_data: FileDataIn, response: Response):
     try:
-        data = _handle_get_file(file_data.name)
+        data = handle_get_file(file_data.name)
         return FileResponse(data.path)
     except FileNotFoundError as ex:
         logging.error(f'(!) could not find: {ex.args}')
@@ -143,7 +143,7 @@ async def create_upload_files(files: List[UploadFile] = File(...)):
     """
     files_data: List[FileData] = []
     for file in files:
-        file_data = _handle_new_file(file)
+        file_data = handle_new_file(file)
         files_data.append(file_data)
     return files_data
 
@@ -162,7 +162,7 @@ def create_artifacts_directory():
     return artifacts_path
 
 
-def _initiate_db():
+def initiate_db():
     """
     initiates the connection to the DB when the program starts.
     Note: as for now it is not connected to any real DB I use the local artifacts path as
@@ -200,7 +200,7 @@ if __name__ == "__main__":
         config._interpolation = ExtendedInterpolation()
         config.read('config.ini')
         artifacts_path = create_artifacts_directory()
-        _initiate_db()
+        initiate_db()
         initiate_server_connection()
     except Exception as ex:
         logging.error(f'(!) an exception occurred: {ex.args}')

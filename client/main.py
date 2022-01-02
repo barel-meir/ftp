@@ -7,21 +7,24 @@ import platform
 import uuid
 from configparser import ExtendedInterpolation, ConfigParser
 
+
 class Server:
     ip: str = None
     port: int = None
     base_url = None
 
-#globals
+
+# globals
 config = ConfigParser(os.environ)
 artifacts_path = ''
 operations_dict = {
-        0: "exit",
-        1: "get list of all files",
-        2: "download artifacts",
-        3: "upload artifacts"
+    0: "exit",
+    1: "get list of all files",
+    2: "download artifacts",
+    3: "upload artifacts"
 }
 yes_no_dict = {0: "No", 1: "Yes"}
+
 
 def read_int(message=''):
     res = None
@@ -31,6 +34,7 @@ def read_int(message=''):
         except Exception:
             printer("Please enter valid numeric port number ", 3)
     return res
+
 
 def read_bool(message=''):
     res = None
@@ -70,9 +74,9 @@ def printer(message, severity=0):
         print(message)
 
 
-def _save_artifact(f_name: str, artifact):
+def save_artifact(f_name: str, artifact):
     try:
-        f_path = _generate_artifact_path(f_name)
+        f_path = generate_artifact_path(f_name)
         logging.debug(f"saving {f_name} at {f_path}")
         with open(f_path, "wb") as buffer:
             buffer.write(artifact)
@@ -82,7 +86,7 @@ def _save_artifact(f_name: str, artifact):
         raise ex
 
 
-def _generate_artifact_path(artifact_name):
+def generate_artifact_path(artifact_name):
     global artifacts_path
     return os.path.join(artifacts_path, artifact_name)
 
@@ -118,7 +122,7 @@ def initiate_connection():
     return server
 
 
-def _test_connection(server):
+def test_connection(server):
     try:
         printer(f"testing connection to {server.base_url}")
         payload = {}
@@ -135,7 +139,7 @@ def _test_connection(server):
         return False
 
 
-def _exit():
+def exit_program():
     print("bye bye (:")
     exit()
 
@@ -193,7 +197,7 @@ def upload_artifact(server):
 
 def handle_archive_download(content):
     temp_zip_name = "{}{}".format(uuid.uuid4(), '.zip')
-    path_to_zip_file = _save_artifact(temp_zip_name, content)
+    path_to_zip_file = save_artifact(temp_zip_name, content)
     printer(f"extracting zip {temp_zip_name} at {artifacts_path}")
     with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
         zip_ref.extractall(artifacts_path)
@@ -213,7 +217,7 @@ def download_multiple_artifacts(server, files_to_download_names):
             'Content-Type': 'application/json'
         }
 
-        response = requests.get(url=server.base_url + "files",  headers=headers, data=data)
+        response = requests.get(url=server.base_url + "files", headers=headers, data=data)
         if response.status_code == 200:
             handle_archive_download(response.content)
         else:
@@ -232,7 +236,7 @@ def download_single_artifact(server, file_to_download_name):
         response = requests.get(url=server.base_url + "file", headers=headers, data=data)
 
         if response.status_code == 200:
-            _save_artifact(file_to_download_name, response.content)
+            save_artifact(file_to_download_name, response.content)
         elif response.status_code == 404:
             printer(f"file {file_to_download_name} is not found in server")
         else:
@@ -262,9 +266,9 @@ def download(server):
 
 def cli():
     server = initiate_connection()
-    if not _test_connection(server):
+    if not test_connection(server):
         if pick_from_map(map=yes_no_dict, message="Would you like to exit?"):
-            _exit()
+            exit_program()
         else:
             cli()
 
@@ -279,7 +283,7 @@ def cli():
         elif op == 3:
             upload_artifact(server)
         else:
-            _exit()
+            exit_program()
 
 
 if __name__ == '__main__':
