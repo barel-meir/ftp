@@ -8,7 +8,7 @@ in the 'connfig.ini' file you should provide:
 * the artifacts folder name to save the files in.
 
 the server supports the following REST actions: 
-* GET /list : returns a list of all the files that are saved in the db.
+* GET /list : returns a list of all the files meta data (name and size) that are saved in the db.
 ```
 example:
 curl -X 'GET' \
@@ -65,8 +65,8 @@ curl -X 'PUT' \
 
 # Client
 the cliennt is built in python using requests lib
-in the 'connfig.ini' file you should provide:
-* the address and port the clienmt should connect to. 
+in the 'config.ini' file you should provide:
+* the address and port the client should connect to. 
 * the artifacts folder name to save the files in (downloaded).
 
 the ui of the app is a simple cli which gives the user the following options:

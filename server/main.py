@@ -6,12 +6,12 @@ from fastapi.responses import FileResponse
 from typing import List
 from configparser import ConfigParser, ExtendedInterpolation, ConfigParser
 
-from models import FileData, FileDataIn
+from models import FileData, FileDataIn, FileDataOut
 import zipfile
 import uvicorn
 import logging
 
-#globals
+# globals
 app = FastAPI()
 artifacts_path = ''
 db: List[FileData] = []
@@ -40,8 +40,9 @@ def handle_new_file(file: UploadFile):
     try:
         logging.debug(f'handle input file: {file.filename}')
         file_data = FileData(name=file.filename, path=generate_artifact_path(file.filename))
-        db.append(file_data)
         save_artifact(file_data, file)
+        file_data.size = os.path.getsize(file_data.path)
+        db.append(file_data)
         return file_data
     except Exception as ex:
         logging.error(f'(!) an exception occurred: {ex.args}')
@@ -89,6 +90,7 @@ def zip_files(files_data: List[FileData]):
 
     return resp
 
+
 @app.get("/")
 async def root():
     return True
@@ -97,10 +99,13 @@ async def root():
 @app.get("/list")
 async def get_all_files():
     """
-    :return: all files meta data in DB
+    :return: all files meta data in DB in the form of its name and size
     """
     logging.debug("handle get_all_files")
-    return db
+    files = []
+    for data in db:
+        files.append(FileDataOut(name=data.name, size=data.size))
+    return files
 
 
 @app.get("/files", response_class=FileResponse)
@@ -133,6 +138,7 @@ async def get_file(file_data: FileDataIn, response: Response):
         logging.error(f'(!) an exception occurred: {ex.args}')
         response.status_code = 500
         return file_data
+
 
 @app.put("/file")
 async def create_upload_files(files: List[UploadFile] = File(...)):
@@ -172,7 +178,8 @@ def initiate_db():
     for root, directories, files in os.walk(artifacts_path):
         for file in files:
             logging.debug(f"handle {file}")
-            db.append(FileData(name=file, path=os.path.join(artifacts_path, file)))
+            f_path = os.path.join(artifacts_path, file)
+            db.append(FileData(name=file, size=os.path.getsize(f_path), path=f_path))
 
 
 def initiate_server_connection():
@@ -188,7 +195,7 @@ def initiate_server_connection():
         exit(1)
 
     logging.info(f"starting server at {address}:{port}")
-    uvicorn.run(app, host=address, port=port,  ssl_keyfile="./key.pem", ssl_certfile="./cert.pem")
+    uvicorn.run(app, host=address, port=port, ssl_keyfile="./key.pem", ssl_certfile="./cert.pem")
 
 
 if __name__ == "__main__":

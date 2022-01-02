@@ -13,3 +13,8 @@ class FileData(BaseModel):
 
 class FileDataIn(BaseModel):
     name: str
+
+
+class FileDataOut(BaseModel):
+    name: str
+    size: Optional[int] = None
